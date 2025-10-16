@@ -1,0 +1,57 @@
+<style>
+  /* Header / nav typography and responsiveness */
+  .app-header { padding:16px 18px; border-bottom:1px solid #eee; display:flex; gap:12px; align-items:center; justify-content:space-between; min-height:64px; }
+  .app-brand { display:flex; align-items:center; gap:8px; }
+  .app-brand img { height:50px; width:auto; display:block; object-fit:contain; }
+  .brand-text { display:flex; flex-direction:column; line-height:1; margin-left:4px; }
+  .brand-primary { font-size:1.6rem; font-weight:800; color:#114ea6; margin:0; }
+  .brand-sub { font-size:1rem; color:#5b6d8a; margin-top:2px; }
+  .app-nav { display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
+  .app-nav a { color:#4b2a9e; text-decoration:none; font-weight:600; font-size:1.3rem; padding:6px 8px; border-radius:6px; }
+  .app-nav a:hover { color:#174ea6; text-decoration:underline; }
+  .app-nav a.active { color:#111827; background:#e5e7eb; text-decoration:none; }
+
+  @media (max-width:720px) {
+    .app-nav a { font-size:1.15rem; }
+    .app-header { padding:12px; }
+  }
+
+  /* Global form typography — increase label and input sizes for better readability */
+  form label,
+  label[for] { font-size:1.18rem; font-weight:600; color:#0f172a; }
+
+  input[type="text"], input[type="email"], input[type="password"], input[type="datetime-local"],
+  select, textarea { font-size:1.15rem; padding:10px 12px; }
+
+  button, input[type="submit"], input[type="button"] { font-size:1.05rem; }
+</style>
+
+<header class="app-header">
+  <div class="app-brand">
+    <div class="brand-text">
+      <div class="brand-primary">📚 Uni Study Spaces</div>
+      <div class="brand-sub">Smart Room Booking</div>
+      </div>
+    </div>
+  <nav class="app-nav">
+    <a routerLink="/login" routerLinkActive="active">Login</a>
+    <a routerLink="/signup" routerLinkActive="active">Signup</a>
+    <a routerLink="/rooms" routerLinkActive="active">Rooms</a>
+    <a routerLink="/calendar" routerLinkActive="active">Calendar</a>
+    <a routerLink="/book" routerLinkActive="active">Book</a>
+    <a routerLink="/history" routerLinkActive="active">History</a>
+    <a routerLink="/admin" routerLinkActive="active">Admin</a>
+  </nav>
+</header>
+
+<!-- Hero / homepage banner. Place your image at: public/assets/hero.jpg -->
+<section style="background:#073b9a url('/assets/hero.jpg') center/cover no-repeat; color:#fff; padding:48px 16px; border-radius:8px; margin:16px 0;">
+  <div style="max-width:1000px;margin:0 auto;text-align:center;padding:40px 16px;background:linear-gradient(rgba(0,0,0,0.18), rgba(0,0,0,0.18));border-radius:6px;">
+    <div style="font-weight:700;font-size:48px;line-height:1;margin-bottom:8px;">Study Room Booking</div>
+    <div style="font-size:20px;opacity:0.95;">Reserve your perfect study space</div>
+  </div>
+</section>
+
+<main style="padding:16px;">
+  <router-outlet></router-outlet>
+</main>
