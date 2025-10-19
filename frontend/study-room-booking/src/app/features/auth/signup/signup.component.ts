@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../../../core/auth.service';
+import { safeStorage } from '../../../core/storage';
 
 @Component({
   selector: 'app-signup',
@@ -24,10 +25,10 @@ import { AuthService } from '../../../core/auth.service';
       <label style="font-size:1.15rem;color:#333;margin-bottom:4px;">Password</label>
       <input placeholder="Create a password" formControlName="password" type="password" style="padding:14px;border:1px solid #ddd;border-radius:6px;font-size:1.15rem;" />
 
+      <!-- Role selection restricted to students; admin accounts should be created server-side -->
       <label style="font-size:1.05rem;color:#333;margin-bottom:4px;">Role</label>
       <select formControlName="role" style="padding:10px;border:1px solid #ddd;border-radius:6px;font-size:1.05rem;">
         <option value="student">Student</option>
-        <option value="admin">Admin</option>
       </select>
 
       <button type="submit" [disabled]="form.invalid" style="width:100%;background:#1a73e8;color:#fff;border:none;padding:12px;border-radius:8px;font-weight:700;font-size:1.05rem;cursor:pointer;box-shadow:0 4px 12px rgba(26,115,232,0.24);">Create Account</button>
@@ -49,7 +50,7 @@ export class SignupComponent {
     if (this.form.invalid) return;
     this.auth.signup(this.form.value as any).subscribe({
       next: (res) => {
-        localStorage.setItem('token', res.token);
+  safeStorage.set('token', res.token);
         this.snack.open('Account created', 'Close', { duration: 2000 });
         this.router.navigate(['/']);
       },

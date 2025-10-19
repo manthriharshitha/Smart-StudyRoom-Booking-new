@@ -13,7 +13,8 @@ export const routes: Routes = [
       { path: 'calendar', loadComponent: () => import('./features/rooms/room-calendar/room-calendar.component').then(m => m.RoomCalendarComponent) },
       { path: 'book', loadComponent: () => import('./features/bookings/booking-form/booking-form.component').then(m => m.BookingFormComponent) },
       { path: 'history', loadComponent: () => import('./features/bookings/booking-history/booking-history.component').then(m => m.BookingHistoryComponent) },
-      { path: 'admin', loadComponent: () => import('./features/admin/admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent) },
+      // admin routes
+      { path: 'admin/rooms', loadComponent: () => import('./features/admin/admin-rooms/admin-rooms.component').then(m => m.AdminRoomsComponent) },
     ]
   }
 ];

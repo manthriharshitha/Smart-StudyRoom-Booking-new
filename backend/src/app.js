@@ -12,7 +12,28 @@ const adminRoutes = require('./routes/admin.routes');
 
 const app = express();
 
-app.use(cors({ origin: process.env.CLIENT_ORIGIN || '*', credentials: true }));
+// CORS configuration for production security
+const allowedOrigins = [
+  'http://localhost:4200',  // Local development
+  'https://smart-study-xlzc.vercel.app',  // Your Vercel frontend
+  process.env.CLIENT_ORIGIN  // Additional origins from environment
+].filter(Boolean); // Remove any undefined values
+
+app.use(cors({ 
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(morgan('dev'));
 

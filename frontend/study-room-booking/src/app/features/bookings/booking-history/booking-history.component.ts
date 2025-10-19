@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { BookingsService } from '../../../core/bookings.service';
 import { Subscription } from 'rxjs';
+import { Router } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-booking-history',
@@ -26,6 +28,7 @@ import { Subscription } from 'rxjs';
             <th style="padding:12px 16px;font-weight:700;">Start</th>
             <th style="padding:12px 16px;font-weight:700;">End</th>
             <th style="padding:12px 16px;font-weight:700;">Status</th>
+            <th style="padding:12px 16px;font-weight:700;text-align:right;">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -35,6 +38,10 @@ import { Subscription } from 'rxjs';
             <td style="padding:12px 16px;vertical-align:middle">{{b.endTime | date:'short'}}</td>
             <td style="padding:12px 16px;vertical-align:middle">
               <span [ngStyle]="{'background': b.status==='booked' ? '#e6f4ea' : '#fff3cd','color': b.status==='booked' ? '#1b7a3a' : '#856404','padding':'6px 10px','border-radius':'999px','font-weight':'700','font-size':'0.95rem'}">{{b.status}}</span>
+            </td>
+            <td style="padding:12px 16px;vertical-align:middle;text-align:right;white-space:nowrap;">
+              <button (click)="onEdit(b)" style="margin-right:8px;padding:8px 10px;border-radius:8px;border:1px solid #cfe3ff;background:#fff;color:#114ea6;cursor:pointer">Edit</button>
+              <button (click)="onCancel(b)" style="padding:8px 10px;border-radius:8px;border:none;background:#ff595e;color:#fff;cursor:pointer">Cancel</button>
             </td>
           </tr>
         </tbody>
@@ -47,7 +54,7 @@ export class BookingHistoryComponent implements OnInit {
   bookings: any[] = [];
   errorMessage = '';
   private sub?: Subscription;
-  constructor(private bookingsService: BookingsService) {}
+  constructor(private bookingsService: BookingsService, private router: Router, private snack: MatSnackBar) {}
   ngOnInit(): void {
     this.load();
     this.sub = this.bookingsService.changed$.subscribe(() => this.load());
@@ -67,6 +74,27 @@ export class BookingHistoryComponent implements OnInit {
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
+  }
+
+  onEdit(booking: any) {
+    // navigate to booking form with booking id to edit
+    this.router.navigate(['/book'], { queryParams: { bookingId: booking._id } });
+  }
+
+  onCancel(booking: any) {
+    if (!confirm('Cancel this booking?')) return;
+    this.bookingsService.remove(booking._id).subscribe({
+      next: () => {
+        // immediate local update for better UX
+        this.bookings = this.bookings.filter(b => b._id !== booking._id);
+        this.snack.open('Booking cancelled', 'Close', { duration: 2000 });
+      },
+      error: (err) => {
+        const msg = err?.error?.error || err?.message || 'Failed to cancel';
+        this.snack.open(msg, 'Close', { duration: 3000 });
+        console.error('Cancel failed', err);
+      }
+    });
   }
 }
 

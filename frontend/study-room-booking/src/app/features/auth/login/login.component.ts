@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../../../core/auth.service';
+import { safeStorage } from '../../../core/storage';
 
 @Component({
   selector: 'app-login',
@@ -20,6 +21,7 @@ import { AuthService } from '../../../core/auth.service';
   <input placeholder="Password" formControlName="password" type="password" style="width:100%;padding:16px 12px;border:1px solid #ddd;border-radius:6px;background:#fff;margin-bottom:18px;font-family:'Segoe UI', Roboto, Arial, sans-serif;font-size:1.2rem;letter-spacing:0.4px;"/>
   <button type="submit" [disabled]="form.invalid" style="width:100%;background:#1a73e8;color:#fff;border:none;padding:12px 14px;border-radius:8px;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(26,115,232,0.28);">Sign in</button>
     </form>
+    <div style="margin-top:8px;font-size:0.9rem;color:#666">Debug: form.invalid = {{form.invalid}}</div>
   </div>
   `
 })
@@ -36,11 +38,15 @@ export class LoginComponent {
     const { email, password } = this.form.value as any;
     this.auth.login(email, password).subscribe({
       next: (res) => {
-        localStorage.setItem('token', res.token);
+  safeStorage.set('token', res.token);
         this.snack.open('Logged in', 'Close', { duration: 2000 });
         this.router.navigate(['/']);
       },
-      error: (err) => this.snack.open(err.error?.error || 'Login failed', 'Close', { duration: 3000 })
+      error: (err) => {
+        console.error('Login error', err);
+        const msg = err?.error?.error || err?.message || 'Login failed';
+        this.snack.open(msg, 'Close', { duration: 4000 });
+      }
     });
   }
 }

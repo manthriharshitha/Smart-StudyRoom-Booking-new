@@ -1,13 +1,10 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
+import { safeStorage } from './storage';
 
 export const authGuard: CanActivateFn = () => {
   const router = inject(Router);
-  const hasStorage = typeof localStorage !== 'undefined';
-  if (!hasStorage) {
-    return true; // SSR: allow render; client will enforce
-  }
-  const token = localStorage.getItem('token');
+    const token = safeStorage.get('token');
   if (!token) {
     router.navigate(['/login']);
     return false;

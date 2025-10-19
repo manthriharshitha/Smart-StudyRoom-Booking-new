@@ -24,6 +24,16 @@ API Overview
 - Bookings (`/api/bookings`): `GET /`, `GET /:id`, `POST /availability`, `POST /`, `PUT /:id`, `DELETE /:id`
 - Admin (`/api/admin`): `GET /analytics`, `GET /export` (CSV)
 
+Seeding sample rooms
+--------------------
+Run the included seed script to create 20 example rooms (it will skip rooms that already exist):
+
+```bash
+cd backend
+npm run seed:rooms20
+```
+
+
 JWT
 - Send `Authorization: Bearer <token>` header for all protected routes.
 

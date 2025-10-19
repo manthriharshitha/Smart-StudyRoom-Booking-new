@@ -34,13 +34,18 @@
       </div>
     </div>
   <nav class="app-nav">
-    <a routerLink="/login" routerLinkActive="active">Login</a>
-    <a routerLink="/signup" routerLinkActive="active">Signup</a>
+    <ng-container *ngIf="!isLogged(); else loggedTpl">
+      <a routerLink="/login" routerLinkActive="active">Login</a>
+      <a routerLink="/signup" routerLinkActive="active">Signup</a>
+    </ng-container>
     <a routerLink="/rooms" routerLinkActive="active">Rooms</a>
     <a routerLink="/calendar" routerLinkActive="active">Calendar</a>
     <a routerLink="/book" routerLinkActive="active">Book</a>
-    <a routerLink="/history" routerLinkActive="active">History</a>
-    <a routerLink="/admin" routerLinkActive="active">Admin</a>
+  <a routerLink="/history" routerLinkActive="active">History</a>
+    <ng-template #loggedTpl>
+      <a (click)="logout()" style="cursor:pointer;color:#b91c1c;font-weight:700;">Logout</a>
+      <a (click)="signout()" style="cursor:pointer;color:#b91c1c;font-weight:700;">Signout</a>
+    </ng-template>
   </nav>
 </header>
 

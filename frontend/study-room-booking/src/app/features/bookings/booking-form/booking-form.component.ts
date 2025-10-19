@@ -6,6 +6,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { RoomsService } from '../../../core/rooms.service';
 import { ActivatedRoute } from '@angular/router';
 import { BookingsService } from '../../../core/bookings.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-booking-form',
@@ -37,7 +38,8 @@ import { BookingsService } from '../../../core/bookings.service';
       </select>
 
   <label style="font-size:1.2rem;color:#333">Date (pick a date)</label>
-  <input type="date" formControlName="endDate" style="padding:10px;border:1px solid #ddd;border-radius:6px;font-size:1.2rem;" />
+  <input type="date" formControlName="endDate" [attr.min]="minDate" style="padding:10px;border:1px solid #ddd;border-radius:6px;font-size:1.2rem;" />
+  <div *ngIf="isPastError" style="color:#b91c1c;font-weight:700;">Please enter a valid future date/time.</div>
 
   <label style="font-size:1.2rem;color:#333">Starting (enter time)</label>
   <input type="time" formControlName="startTime" style="padding:12px;border:1px solid #ddd;border-radius:6px;font-size:1.2rem;" />
@@ -62,7 +64,12 @@ export class BookingFormComponent {
   rooms: any[] = [];
   available: boolean | null = null;
   form!: FormGroup;
+  minDate: string;
+  isPastError: boolean = false;
   constructor(private fb: FormBuilder, private roomsService: RoomsService, private bookings: BookingsService, private snack: MatSnackBar, private route: ActivatedRoute) {
+    // set minimum selectable date to today (YYYY-MM-DD)
+    const today = new Date();
+    this.minDate = today.toISOString().slice(0, 10);
     this.form = this.fb.group({
       userName: ['', Validators.required],
       studentId: ['', Validators.required],
@@ -78,11 +85,28 @@ export class BookingFormComponent {
     this.roomsService.list().subscribe(res => {
       this.rooms = res;
       const roomId = this.route.snapshot.queryParamMap.get('roomId');
+      const bookingId = this.route.snapshot.queryParamMap.get('bookingId');
       if (roomId) {
         this.form.patchValue({ roomId });
       }
+      if (bookingId) {
+        // load booking for editing
+        this.bookings.get(bookingId).subscribe({
+          next: (b) => {
+            if (!b) return;
+            const start = new Date(b.startTime);
+            const end = new Date(b.endTime);
+            const dateStr = start.toISOString().slice(0,10);
+            const startTimeStr = start.toISOString().slice(11,16);
+            const endTimeStr = end.toISOString().slice(11,16);
+            this.form.patchValue({ userName: b.userId?.name || b.userName, studentId: b.studentId || '', purpose: b.purpose || 'individual', roomId: b.roomId?._id || b.roomId, endDate: dateStr, startTime: startTimeStr, endTime: endTimeStr });
+            this.editingId = bookingId;
+          }
+        });
+      }
     });
   }
+  editingId: string | null = null;
   private combineDateTime(date: string, time: string, ampm?: string): string | null {
     // date: YYYY-MM-DD, time: HH:MM, ampm optional ('AM'|'PM')
     if (!date || !time) return null;
@@ -108,6 +132,21 @@ export class BookingFormComponent {
       this.available = null;
       return;
     }
+    // prevent checking past dates
+    const now = new Date().toISOString();
+    if (startIso <= now) {
+      this.isPastError = true;
+      this.available = null;
+      this.snack.open('Please enter a future start date/time', 'Close', { duration: 3000 });
+      return;
+    }
+    if (endIso <= startIso) {
+      this.isPastError = true;
+      this.available = null;
+      this.snack.open('End time must be after start time', 'Close', { duration: 3000 });
+      return;
+    }
+    this.isPastError = false;
     this.bookings.availability(v.roomId, startIso, endIso).subscribe(res => this.available = res.available);
   }
   onSubmit(): void {
@@ -116,6 +155,9 @@ export class BookingFormComponent {
   const startIso = this.combineDateTime(v.endDate, v.startTime);
   const endIso = this.combineDateTime(v.endDate, v.endTime);
   if (!startIso || !endIso) { this.snack.open('Please select date and times', 'Close', { duration: 2500 }); return; }
+  const now = new Date().toISOString();
+  if (startIso <= now) { this.snack.open('Please enter a future start date/time', 'Close', { duration: 3000 }); return; }
+  if (endIso <= startIso) { this.snack.open('End time must be after start time', 'Close', { duration: 3000 }); return; }
     const payload = {
       roomId: v.roomId,
       startTime: startIso,
@@ -124,10 +166,17 @@ export class BookingFormComponent {
       studentId: v.studentId,
       purpose: v.purpose
     };
-    this.bookings.create(payload).subscribe({
-      next: () => this.snack.open('Booking created', 'Close', { duration: 2000 }),
-      error: (err) => this.snack.open(err.error?.error || 'Failed', 'Close', { duration: 3000 })
-    });
+    if (this.editingId) {
+      this.bookings.update(this.editingId, { startTime: startIso, endTime: endIso, purpose: v.purpose }).subscribe({
+        next: () => this.snack.open('Booking updated', 'Close', { duration: 2000 }),
+        error: (err) => this.snack.open(err.error?.error || 'Failed to update', 'Close', { duration: 3000 })
+      });
+    } else {
+      this.bookings.create(payload).subscribe({
+        next: () => this.snack.open('Booking created', 'Close', { duration: 2000 }),
+        error: (err) => this.snack.open(err.error?.error || 'Failed', 'Close', { duration: 3000 })
+      });
+    }
   }
 }
 

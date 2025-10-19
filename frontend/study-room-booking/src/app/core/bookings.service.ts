@@ -13,14 +13,15 @@ export class BookingsService {
   availability(roomId: string, startTime: string, endTime: string) {
     return this.http.post<{ available: boolean }>(`${environment.apiUrl}/bookings/availability`, { roomId, startTime, endTime });
   }
+  get(id: string) { return this.http.get<any>(`${environment.apiUrl}/bookings/${id}`); }
   create(payload: { roomId: string; startTime: string; endTime: string; userName?: string; studentId?: string; purpose?: string }) {
     return this.http.post(`${environment.apiUrl}/bookings`, payload).pipe(
       // notify subscribers that bookings changed when the create call succeeds
       tap(() => this._changed.next())
     );
   }
-  update(id: string, payload: any) { return this.http.put(`${environment.apiUrl}/bookings/${id}`, payload); }
-  remove(id: string) { return this.http.delete(`${environment.apiUrl}/bookings/${id}`); }
+  update(id: string, payload: any) { return this.http.put(`${environment.apiUrl}/bookings/${id}`, payload).pipe(tap(() => this._changed.next())); }
+  remove(id: string) { return this.http.delete(`${environment.apiUrl}/bookings/${id}`).pipe(tap(() => this._changed.next())); }
 }
 
 

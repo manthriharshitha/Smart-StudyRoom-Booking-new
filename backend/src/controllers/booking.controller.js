@@ -14,6 +14,8 @@ function buildOverlapFilter(roomId, startTime, endTime) {
 async function list(req, res) {
   const { roomId, userId, start, end } = req.query;
   const filter = {};
+  // by default show only active (booked) bookings; allow including cancelled when includeCancelled=true
+  if (req.query.includeCancelled !== 'true') filter.status = 'booked';
   if (roomId) filter.roomId = roomId;
   if (userId) filter.userId = userId;
   if (start || end) {
@@ -84,7 +86,10 @@ async function remove(req, res) {
   if (String(booking.userId) !== req.user.id && req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Forbidden' });
   }
-  await Booking.findByIdAndDelete(req.params.id);
+  // mark as cancelled instead of deleting so we retain an audit trail
+  booking.status = 'cancelled';
+  await booking.save();
+  console.log(`Booking ${booking._id} cancelled by user ${req.user?.id} (role=${req.user?.role})`);
   return res.json({ success: true });
 }
 
