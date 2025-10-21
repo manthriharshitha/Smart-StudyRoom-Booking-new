@@ -3,26 +3,25 @@ const cors = require('cors');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
 
+// Load environment variables
 dotenv.config();
 
-const authRoutes = require('./routes/auth.routes');
-const roomRoutes = require('./routes/room.routes');
-const bookingRoutes = require('./routes/booking.routes');
-const adminRoutes = require('./routes/admin.routes');
+const authRoutes = require('../../backend/src/routes/auth.routes');
+const roomRoutes = require('../../backend/src/routes/room.routes');
+const bookingRoutes = require('../../backend/src/routes/booking.routes');
+const adminRoutes = require('../../backend/src/routes/admin.routes');
 
 const app = express();
 
-// CORS configuration for production security
+// CORS configuration for production
 const allowedOrigins = [
-  'http://localhost:4200',  // Local development
-  'https://smart-study-xlzc.vercel.app',  // Your Vercel frontend
-  'https://your-frontend-url.netlify.app',  // Your Netlify frontend
-  process.env.CLIENT_ORIGIN  // Additional origins from environment
-].filter(Boolean); // Remove any undefined values
+  'http://localhost:4200',
+  'https://your-frontend-url.netlify.app', // Update with your actual frontend URL
+  process.env.CLIENT_ORIGIN
+].filter(Boolean);
 
 app.use(cors({ 
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.includes(origin)) {
@@ -35,6 +34,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(express.json());
 app.use(morgan('dev'));
 
@@ -47,13 +47,36 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Global error handler
-// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   const status = err.status || 500;
   const message = err.message || 'Internal Server Error';
   res.status(status).json({ error: message });
 });
 
-module.exports = app;
+// Netlify Functions handler
+exports.handler = async (event, context) => {
+  // Convert Netlify event to Express request
+  const request = {
+    method: event.httpMethod,
+    url: event.path,
+    headers: event.headers,
+    body: event.body
+  };
 
+  const response = {
+    statusCode: 200,
+    headers: {},
+    body: ''
+  };
 
+  // Handle the request with Express app
+  return new Promise((resolve) => {
+    app(request, response, () => {
+      resolve({
+        statusCode: response.statusCode,
+        headers: response.headers,
+        body: response.body
+      });
+    });
+  });
+};
