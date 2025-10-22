@@ -21,9 +21,12 @@ async function signup(req, res) {
 async function login(req, res) {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Missing fields' });
+  // Debug: log incoming login attempt (do not log password)
+  console.log(`Login attempt for: ${email}`);
   const user = await User.findOne({ email });
   if (!user) return res.status(401).json({ error: 'Invalid credentials' });
   const ok = await user.comparePassword(password);
+  console.log(`User found: ${user.email}, password match: ${ok}`);
   if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
   const token = signToken(user);
   return res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });

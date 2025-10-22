@@ -1,4 +1,4 @@
 export const environment = {
-  production: true,
-  apiUrl: 'https://study-room-livid.vercel.app/'
+  production: false,
+  apiUrl: 'http://localhost:4000/api'
 };
